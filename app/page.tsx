@@ -3,22 +3,16 @@ import { jsonToPhpArray } from "@/lib/utils";
 import Link from "next/link";
 
 export default async function Home() {
-  const regions = await fetch("https://providers-endpoints.vercel.app/");
-
-  if (!regions.ok) {
-    return <div>Failed to fetch regions</div>;
-  }
-
-  const data = await regions.json();
+  const data = await getData();
 
   return (
     <main className="grid grid-cols-8 gap-20">
       <aside className="relative col-span-2 border-r pt-10 ">
         <menu className=" sticky top-10 space-y-2">
           {Object.keys(data).map((provider) => (
-            <li className=" capitalize text-lg " key={provider}>
+            <li className="  text-lg " key={provider}>
               <Link href={`#${provider.toLowerCase()}`}>
-                {provider.toLowerCase().replaceAll("_", " ")}
+                {provider}
               </Link>
             </li>
           ))}
@@ -28,16 +22,13 @@ export default async function Home() {
         <h2>Cloud Provider Regions</h2>
         {Object.keys(data).map((provider) => (
           <section key={provider}>
-            <h3 id={provider.toLowerCase()} className="capitalize">
-              {provider.replaceAll("_", " ")}
-            </h3>
+            <h3 id={provider.toLowerCase()}>{provider}</h3>
             <ul>
               {Object.keys(data[provider]).map((section) =>
                 data[provider][section] === null ? null : (
                   <li key={section} id={section.toLowerCase()}>
                     <h4
                       id={`${provider.toLowerCase()}_${section.toLowerCase()}`}
-                      className="capitalize"
                     >
                       {provider} {section} Regions
                     </h4>
@@ -51,7 +42,7 @@ export default async function Home() {
                           {JSON.stringify(data[provider][section], null, 4)}
                         </pre>
                       </TabsContent>
-                    <TabsContent value="php">
+                      <TabsContent value="php">
                         <pre className="w-full">
                           {jsonToPhpArray(
                             JSON.stringify(data[provider][section])
@@ -68,4 +59,12 @@ export default async function Home() {
       </article>
     </main>
   );
+}
+
+async function getData() {
+  const regions = await fetch("https://providers-endpoints.vercel.app/", {
+    next: { revalidate: 600 },
+  });
+  const data = await regions.json();
+  return data;
 }
